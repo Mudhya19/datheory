@@ -1,0 +1,47 @@
+@import "tailwindcss/preflight";
+@tailwind utilities;
+
+/* Custom styles for dark theme */
+
+body {
+    @apply bg-slate-900 text-white;
+}
+
+.text-primary {
+    @apply text-white;
+}
+
+.text-secondary {
+    @apply text-slate-400;
+}
+
+.bg-surface {
+    @apply bg-slate-800;
+}
+
+.accent-bg {
+    @apply bg-emerald-500;
+}
+
+.accent-text {
+    @apply text-emerald-400;
+}
+
+.hover-accent:hover {
+    @apply bg-emerald-600;
+}
+
+.border-surface {
+    @apply border-slate-600;
+}
+
+
+/* Project card hover effect */
+
+.project-card {
+    @apply bg-slate-800 rounded-lg p-5 hover: scale-[1.02] transition-all duration-300 ease-in-out;
+}
+
+.project-card:hover {
+    @apply shadow-lg shadow-emerald-500/20;
+}
