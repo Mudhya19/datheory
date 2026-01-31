@@ -4,37 +4,40 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use App\Models\AdminUser;
+use Illuminate\Support\Facades\Auth;
 
 class AdminAuth
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
     public function handle(Request $request, Closure $next)
     {
-        // Untuk keperluan portfolio, kita gunakan basic token auth sementara
-        // Di implementasi production, gunakan sistem auth lengkap
-
-        $adminToken = env('ADMIN_TOKEN', 'admin-secret-token');
-        $token = $request->header('Authorization') ?? $request->query('token');
+        $token = $request->header('X-ADMIN-TOKEN');
 
         if (!$token) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json([
+                'message' => 'Token required'
+            ], 401);
         }
 
-        // Hapus prefix Bearer jika ada
-        if (str_starts_with($token, 'Bearer ')) {
-            $token = substr($token, 7);
+        // Try to find user by token (using remember token field)
+        $adminUser = AdminUser::where('remember_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$adminUser) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
-        if ($token !== $adminToken) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
+        // Update last login info
+        $adminUser->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip()
+        ]);
+
+        // Set the authenticated admin user for this request
+        $request->attributes->set('admin_user', $adminUser);
 
         return $next($request);
     }

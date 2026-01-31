@@ -3,7 +3,7 @@ import { http } from 'msw';
 // Mock data
 const mockProfile = {
     id: 1,
-    name: "datheory",
+    name: "Datheory",
     title: "Data Science & Machine Learning Engineer",
     email: "muhdhiauddin@gmail.com",
     phone: "+62 812 3456 7890",

@@ -46,7 +46,7 @@ export default function Home() {
   return (
     <>
       <MetaTags
-        title="datheory - Data Science & Machine Learning Portfolio"
+        title="Datheory - Data Science & Machine Learning Portfolio"
         description="Professional portfolio showcasing expertise in data science, machine learning, and fullstack development."
         path="/"
       />

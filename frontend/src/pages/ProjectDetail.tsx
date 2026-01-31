@@ -32,7 +32,7 @@ export default function ProjectDetail() {
   return (
     <>
       <MetaTags
-        title={`${project.title} - datheory Portfolio`}
+        title={`${project.title} - Datheory Portfolio`}
         description={project.description}
         path={`/projects/${project.slug}`}
       />

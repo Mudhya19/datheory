@@ -23,7 +23,18 @@ class ProjectController extends Controller
             $query->where('is_published', $request->published);
         }
 
+        // Include trashed (archived) projects only if specifically requested
+        if ($request->has('with_trashed') && $request->with_trashed) {
+            $query->withTrashed();
+        }
+
         $projects = $query->latest()->get();
+        return ProjectResource::collection($projects);
+    }
+
+    public function getArchived(Request $request)
+    {
+        $projects = Project::onlyTrashed()->latest()->get();
         return ProjectResource::collection($projects);
     }
 
@@ -46,6 +57,7 @@ class ProjectController extends Controller
             'demo_url' => 'nullable|url',
             'thumbnail_url' => 'nullable|url',
             'is_published' => 'boolean',
+            'featured' => 'boolean',
             'metadata' => 'nullable|array'
         ]);
 
@@ -66,6 +78,7 @@ class ProjectController extends Controller
             'demo_url' => 'nullable|url',
             'thumbnail_url' => 'nullable|url',
             'is_published' => 'boolean',
+            'featured' => 'boolean',
             'metadata' => 'nullable|array'
         ]);
 
@@ -76,6 +89,36 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
-        return response()->json(['message' => 'Project deleted successfully']);
+        return response()->json(['message' => 'Project archived successfully']);
+    }
+
+    public function restore($id)
+    {
+        $project = Project::withTrashed()->findOrFail($id);
+        $project->restore();
+
+        return response()->json([
+            'message' => 'Project restored successfully',
+            'data' => new ProjectResource($project)
+        ]);
+    }
+
+    public function forceDestroy(Project $project)
+    {
+        $project->forceDelete();
+        return response()->json(['message' => 'Project permanently deleted']);
+    }
+
+    public function toggleStatus(Project $project)
+    {
+        $project->update(['is_published' => !$project->is_published]);
+
+        return response()->json([
+            'message' => 'Project status updated successfully',
+            'data' => [
+                'id' => $project->id,
+                'is_published' => $project->is_published
+            ]
+        ]);
     }
 }

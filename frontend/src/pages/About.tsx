@@ -13,8 +13,8 @@ export default function About() {
   return (
     <>
       <MetaTags
-        title="About datheory - Data Science & Machine Learning Professional"
-        description="Learn more about datheory, a data science and machine learning professional with expertise in building data-driven solutions."
+        title="About Datheory - Data Science & Machine Learning Professional"
+        description="Learn more about Datheory, a data science and machine learning professional with expertise in building data-driven solutions."
         path="/about"
       />
       <div className="p-10 text-white bg-slate-900 min-h-screen">

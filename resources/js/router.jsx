@@ -8,6 +8,8 @@ import Dashboard from "./admin/pages/Dashboard";
 import ProjectsAdmin from "./admin/pages/ProjectsAdmin";
 import ProjectForm from "./admin/pages/ProjectForm";
 import Login from "./admin/pages/Login";
+import AdminGuard from "./admin/AdminGuard";
+import ProtectedRoute from "./admin/components/ProtectedRoute";
 
 // Simple fallback components for now
 const Skills = () => <div className="p-8"><h1 className="text-3xl font-bold text-yellow-400">Skills Page</h1><p>Skills and expertise</p></div>;
@@ -51,12 +53,45 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <AdminApp />,
+    element: (
+      <AdminGuard>
+        <AdminApp />
+      </AdminGuard>
+    ),
     children: [
-      { path: "", element: <Dashboard /> },
-      { path: "projects", element: <ProjectsAdmin /> },
-      { path: "projects/create", element: <ProjectForm /> },
-      { path: "projects/:id/edit", element: <ProjectForm /> },
+      { index: true, element: <Dashboard /> },
+      {
+        path: "projects",
+        element: <ProtectedRoute permission="projects.view"><ProjectsAdmin /></ProtectedRoute>
+      },
+      {
+        path: "projects/create",
+        element: <ProtectedRoute permission="projects.create"><ProjectForm /></ProtectedRoute>
+      },
+      {
+        path: "projects/:id/edit",
+        element: <ProtectedRoute permission="projects.edit"><ProjectForm /></ProtectedRoute>
+      },
+      {
+        path: "skills",
+        element: <ProtectedRoute permission="skills.view"><Skills /></ProtectedRoute>
+      },
+      {
+        path: "skills/create",
+        element: <ProtectedRoute permission="skills.create"><SkillForm /></ProtectedRoute>
+      },
+      {
+        path: "skills/:id/edit",
+        element: <ProtectedRoute permission="skills.edit"><SkillForm /></ProtectedRoute>
+      },
+      {
+        path: "profile",
+        element: <ProtectedRoute permission="profile.view"><Profile /></ProtectedRoute>
+      },
+      {
+        path: "users",
+        element: <ProtectedRoute permission="users.view"><Users /></ProtectedRoute>
+      },
     ],
   },
   {

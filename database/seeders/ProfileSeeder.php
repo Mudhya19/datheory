@@ -14,7 +14,7 @@ class ProfileSeeder extends Seeder
     public function run(): void
     {
         Profile::create([
-            'full_name' => 'datheory',
+            'full_name' => 'Datheory',
             'title' => 'Data Science & Machine Learning Enthusiast',
             'bio' => 'Saya fokus membangun dasar data analysis dan machine learning melalui project studi case sampai use case.',
             'email' => 'email@domain.com',

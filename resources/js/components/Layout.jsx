@@ -14,7 +14,7 @@ export default function Layout() {
       <header className="sticky top-0 z-10 bg-gray-800/90 backdrop-blur-sm py-4 px-6 border-b border-gray-700">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent focus:outline-none focus:ring-2 focus:ring-green-500/50 rounded">
-            datheory
+            Datheory
           </Link>
 
           <nav className="hidden md:flex space-x-8">
@@ -80,7 +80,7 @@ export default function Layout() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
               <div className="text-lg font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-                datheory
+                Datheory
               </div>
               <p className="text-gray-400 text-sm mt-1">
                 Data Science & Machine Learning Enthusiast
@@ -103,7 +103,7 @@ export default function Layout() {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-700 text-center">
             <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} datheory. All rights reserved.
+              © {new Date().getFullYear()} Datheory. All rights reserved.
             </p>
           </div>
         </div>

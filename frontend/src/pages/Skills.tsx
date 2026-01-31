@@ -38,7 +38,7 @@ export default function Skills() {
   return (
     <>
       <MetaTags
-        title="Skills - datheory Portfolio"
+        title="Skills - Datheory Portfolio"
         description="Technical skills and expertise in data science, machine learning, and fullstack development"
         path="/skills"
       />

@@ -1,24 +1,14 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
+import { hasPermission } from "../utils/permissions";
 
-export default function ProtectedRoute({ children }) {
-  const navigate = useNavigate();
+export default function ProtectedRoute({ children, permission }) {
+  // Check if user has the required permission
+  const hasRequiredPermission = hasPermission(permission);
 
-  useEffect(() => {
-    // Cek apakah token admin ada di localStorage
-    const adminToken = localStorage.getItem('adminToken');
-
-    // Jika tidak ada token, redirect ke halaman login
-    if (!adminToken) {
-      navigate('/admin/login');
-    }
-  }, [navigate]);
-
-  // Cek apakah token ada sebelum merender children
-  const adminToken = localStorage.getItem('adminToken');
-  if (!adminToken) {
-    return null; // Akan di-redirect oleh useEffect
+  if (!hasRequiredPermission) {
+    // Redirect to dashboard or show unauthorized page
+    return <Navigate to="/admin" replace />;
   }
 
- return children;
+  return children;
 }

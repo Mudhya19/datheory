@@ -1,16 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio | datheory</title>
-
-    @viteReactRefresh
-    @vite(['resources/js/app.jsx', 'resources/css/app.css'])
+    <title>TEST BLADE</title>
+    @vite(['resources/js/app.jsx'], 'http://127.0.0.1:5174')
 </head>
 
-<body class="bg-slate-900 text-white">
+<body>
     <div id="root"></div>
 </body>
 

@@ -1,17 +1,7 @@
-import React from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider } from "react-router-dom";
-import { router } from "./router.jsx";
 
-const container = document.getElementById("root");
+const root = document.getElementById("root");
 
-if (!container) {
-  console.error("Root container #root not found");
-} else {
-  console.log("React successfully mounted to #root");
-  createRoot(container).render(
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
-  );
-}
+createRoot(root).render(
+  <h1 style={{color:"red", fontSize:"40px"}}>REACT WORKS</h1>
+);

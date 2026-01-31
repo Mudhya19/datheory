@@ -25,8 +25,8 @@ Get profile information
 ```json
 {
     "id": 1,
-    "full_name": "datheory",
-    "name": "datheory",
+    "full_name": "Datheory",
+    "name": "Datheory",
     "title": "Data Science & Machine Learning Enthusiast",
     "bio": "Saya fokus membangun dasar data analysis dan machine learning melalui project studi case sampai use case.",
     "location": "Indonesia",

@@ -11,8 +11,8 @@ export default function Projects() {
   return (
     <>
       <MetaTags
-        title="Projects - datheory Portfolio"
-        description="Explore projects showcasing expertise in data science, machine learning, and fullstack development by datheory."
+        title="Projects - Datheory Portfolio"
+        description="Explore projects showcasing expertise in data science, machine learning, and fullstack development by Datheory."
         path="/projects"
       />
       <section className="max-w-6xl mx-auto px-6 py-16">

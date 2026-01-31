@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -19,12 +20,15 @@ class Project extends Model
         'demo_url',
         'thumbnail_url',
         'is_published',
+        'featured',
         'metadata'
     ];
 
     protected $casts = [
         'tech_stack' => 'array',
-        'metadata' => 'array'
+        'metadata' => 'array',
+        'is_published' => 'boolean',
+        'featured' => 'boolean',
     ];
 
     protected $appends = ['description', 'content', 'image_url'];

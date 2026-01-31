@@ -1,52 +1,85 @@
-# Laravel Proyek Mudhya Dev
+# Portfolio Web Application
 
-Selamat datang di proyek Laravel Anda di direktori utama!
+## Overview
 
-## Informasi Dasar
+This project is a full-stack portfolio web application built to demonstrate real-world engineering practices, including API design, frontend architecture, authentication flow, and admin data management. The application features a public-facing portfolio site with an isolated admin panel for content management.
 
-Proyek ini adalah instalasi fresh dari Laravel versi 12.x dengan semua komponen dasar yang diperlukan untuk pengembangan aplikasi web modern.
+## Tech Stack
 
-## Struktur Direktori Penting
+-   **Backend**: Laravel (REST API, Middleware-based admin auth, Eloquent ORM)
+-   **Frontend**: React (SPA, Vite, Tailwind CSS)
+-   **Database**: MySQL
+-   **Authentication**: Token-based admin authentication with expiry handling
+-   **Development Environment**: Laragon (Windows)
 
--   `app/` - Tempat kode utama aplikasi berada
--   `config/` - File-file konfigurasi aplikasi
--   `database/` - Migrasi, factory, dan seeder database
--   `public/` - File-file publik termasuk index.php
--   `resources/` - View, asset CSS/JS, dan file mentahan lainnya
--   `routes/` - File-file definisi rute aplikasi
--   `storage/` - File-file penyimpanan sementara dan log
--   `tests/` - File-file pengujian unit dan fitur
+## Architecture Overview
 
-## Cara Menjalankan Aplikasi
+Public users interact with a React SPA rendered via Laravel Vite integration. The application follows a hybrid approach where Laravel serves the main HTML page and API endpoints while React handles the frontend experience. Admin users access a protected admin interface that communicates with authenticated Laravel API endpoints, completely isolated from the public UI.
 
-Untuk menjalankan aplikasi Laravel secara lokal, gunakan perintah berikut dari direktori utama:
+The architecture separates public content consumption from administrative functions, ensuring security and maintainability. API endpoints support both published content for public viewing and unpublished content for admin management.
 
-```bash
-php artisan serve
-```
+## Features
 
-Aplikasi akan tersedia di http://localhost:8000
+-   **Public Project Listing**: Responsive portfolio showcase with project details
+-   **Admin Dashboard**: Isolated administrative interface with full CRUD capabilities
+-   **Content Management**: Create, read, update, and delete projects with publish/unpublish functionality
+-   **Token-Based Authentication**: Secure admin access with token expiry handling
+-   **Responsive Design**: Mobile-first approach using Tailwind CSS
+-   **Safe Delete Operations**: Confirmation dialogs and loading states for defensive UX
+-   **Clean State Management**: Proper error handling and empty state displays
 
-## Konfigurasi Database
+## Admin Panel
 
-Secara default, aplikasi dikonfigurasi untuk menggunakan SQLite. File database `database.sqlite` sudah dibuat di direktori `database/`.
+The admin panel represents a key architectural decision in this project:
 
-Jika Anda ingin menggunakan database lain (MySQL, PostgreSQL), ubah konfigurasi di file `.env` sesuai kebutuhan Anda.
+-   **Isolated Interface**: Completely separated from public UI components
+-   **Protected Routes**: Middleware-based authentication ensures only authorized access
+-   **Complete Auth Lifecycle**: Login, token management, and logout functionality
+-   **Defensive UX**: Confirmation dialogs for destructive actions, loading indicators, and proper error messaging
+-   **Role-Based Access**: Strict separation between public and administrative concerns
 
-## Langkah Berikutnya
+This isolation demonstrates understanding of security best practices and proper application architecture.
 
--   Sesuaikan konfigurasi di file `.env` sesuai lingkungan Anda
--   Buat model, controller, dan migrasi baru sesuai kebutuhan aplikasi
--   Tambahkan route di `routes/web.php` atau `routes/api.php`
--   Gunakan Artisan CLI untuk bantuan lebih lanjut: `php artisan list`
+## Security Considerations
 
-## Perintah-perintah Umum
+-   Admin routes protected by custom middleware
+-   Token-based authentication with configurable expiry
+-   Clear separation of public/admin concerns
+-   Input validation on both frontend and backend
+-   CSRF protection through Laravel's built-in mechanisms
 
--   `php artisan migrate` - Jalankan migrasi database
--   `php artisan db:seed` - Isi data awal ke database
--   `php artisan make:model NamaModel` - Buat model baru
--   `php artisan make:controller NamaController` - Buat controller baru
--   `php artisan cache:clear` - Bersihkan cache
--   `php artisan config:cache` - Cache konfigurasi
+## Development Setup
 
-Proyek Laravel ini siap digunakan untuk pengembangan aplikasi sesuai kebutuhan Anda!
+1. Clone the repository
+2. Install PHP dependencies: `composer install`
+3. Install Node.js dependencies: `npm install`
+4. Configure environment variables in `.env`
+5. Run database migrations: `php artisan migrate`
+6. Seed initial data: `php artisan db:seed`
+7. Start development servers:
+    - Backend: `php artisan serve`
+    - Frontend: `npm run dev`
+
+Access the application at `http://127.0.0.1:8000`
+
+## Engineering Decisions
+
+### Admin Interface Separation
+
+The admin panel is completely isolated from the public UI to maintain security boundaries and demonstrate proper architectural separation of concerns. This approach prevents potential security vulnerabilities and makes the codebase more maintainable.
+
+### Token-Based Authentication
+
+For a portfolio application, token-based authentication provides a clean, stateless approach that works well with API-driven architectures. This choice demonstrates understanding of modern authentication patterns without over-engineering for a simple portfolio.
+
+### Laravel + React Integration
+
+Rather than building a completely decoupled frontend, this project uses Laravel's Vite integration to serve React assets. This approach maintains the benefits of a modern JavaScript frontend while keeping deployment simple and leveraging Laravel's routing and middleware capabilities.
+
+### Hybrid Architecture
+
+The application combines server-side rendering for the initial HTML with client-side React rendering for dynamic interactions. This provides good SEO for the portfolio content while maintaining a responsive user experience.
+
+### Defensive User Experience
+
+The admin interface implements defensive UX patterns including confirmation dialogs for destructive actions, loading states, and proper error handling. These patterns demonstrate attention to real-world usability concerns.

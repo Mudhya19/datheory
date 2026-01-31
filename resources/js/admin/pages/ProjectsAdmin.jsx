@@ -1,151 +1,318 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { getAllProjects, deleteProject } from '../services/admin.project.service';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  fetchAllProjects,
+  deleteProject,
+  restoreProject,
+  toggleProjectStatus,
+  getArchivedProjects
+} from "../services/admin.project.service";
 
 export default function ProjectsAdmin() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [filter, setFilter] = useState('active'); // 'active', 'archived', 'all'
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    fetchProjects();
+  }, [filter]);
 
-  const loadProjects = async () => {
+  async function fetchProjects() {
+    setLoading(true);
     try {
-      setLoading(true);
-      const data = await getAllProjects();
+      let data = [];
+      if (filter === 'archived') {
+        data = await getArchivedProjects();
+      } else {
+        // For active and all filters, we get all projects and filter locally
+        data = await fetchAllProjects();
+        if (filter === 'active') {
+          // Filter out soft-deleted projects
+          data = data.filter(p => !p.deleted_at);
+        }
+        // For 'all' filter, we return all projects including soft-deleted ones
+      }
       setProjects(data);
-    } catch (err) {
-      setError('Failed to load projects');
-      console.error('Error loading projects:', err);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
-      try {
-        await deleteProject(id);
-        setProjects(projects.filter(project => project.id !== id));
-      } catch (err) {
-        setError('Failed to delete project');
-        console.error('Error deleting project:', err);
-      }
-    }
- };
+  }
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Manage Projects</h1>
-        </div>
-        <div className="animate-pulse">
-          <div className="h-16 bg-gray-200 rounded"></div>
-          <div className="h-16 bg-gray-200 rounded mt-4"></div>
-          <div className="h-16 bg-gray-200 rounded mt-4"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p className="text-gray-600">Loading projects...</p>
+          <div className="mt-2 inline-block align-middle">
+            <div className="w-8 h-8 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // Show empty state if no projects exist for the selected filter
+  if (!loading && projects.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Manage Projects</h1>
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Projects Admin</h2>
         </div>
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error! </strong>
-          <span className="block sm:inline">{error}</span>
+
+        <div className="mb-6 flex flex-wrap gap-4 items-center">
+          <Link to="/admin/projects/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            + New Project
+          </Link>
+
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setFilter('active')}
+              className={`px-3 py-1 text-sm font-medium rounded-md ${
+                filter === 'active'
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setFilter('archived')}
+              className={`px-3 py-1 text-sm font-medium rounded-md ${
+                filter === 'archived'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              Archived
+            </button>
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-3 py-1 text-sm font-medium rounded-md ${
+                filter === 'all'
+                  ? 'bg-purple-100 text-purple-800'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="text-center py-12">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              {filter === 'archived'
+                ? 'No archived projects'
+                : filter === 'all'
+                  ? 'No projects found'
+                  : 'No active projects'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {filter === 'archived'
+                ? 'Projects you archive will appear here.'
+                : filter === 'all'
+                  ? 'No projects match your current filter.'
+                  : 'Get started by creating a new project.'}
+            </p>
+            {filter !== 'archived' && (
+              <div className="mt-6">
+                <Link
+                  to="/admin/projects/create"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 3a1 0 011 1v5h5a1 1 0 110 2h-5v5a1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                  New Project
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    );
+  }
+
+  async function handleArchiveOrRestore(id) {
+    const project = projects.find(p => p.id === id);
+    const action = project.deleted_at ? 'restore' : 'archive';
+    if (!confirm(`Are you sure you want to ${action} this project?`)) return;
+
+    setDeletingId(id);
+
+    try {
+      if (project.deleted_at) {
+        // Restore the project
+        await restoreProject(id);
+        setProjects(prev => prev.filter(p => p.id !== id)); // Remove from archived list
+      } else {
+        // Archive the project
+        await deleteProject(id);
+        setProjects(prev => prev.map(p =>
+          p.id === id ? { ...p, deleted_at: new Date().toISOString() } : p
+        ));
+      }
+    } catch (error) {
+      alert(`Failed to ${action} project: ` + (error.response?.data?.message || "Unknown error"));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleToggle(id) {
+    const res = await toggleProjectStatus(id);
+
+    setProjects(prev =>
+      prev.map(p =>
+        p.id === id ? { ...p, is_published: res.data.data.is_published } : p
+      )
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Manage Projects</h1>
-        <div className="mt-4 flex justify-between items-center">
-          <p className="text-gray-600">Total projects: {projects.length}</p>
-          <Link
-            to="/admin/projects/create"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Projects Admin</h2>
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-4 items-center">
+        <Link to="/admin/projects/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          + New Project
+        </Link>
+
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setFilter('active')}
+            className={`px-3 py-1 text-sm font-medium rounded-md ${
+              filter === 'active'
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+            }`}
           >
-            Create New Project
-          </Link>
+            Active
+          </button>
+          <button
+            onClick={() => setFilter('archived')}
+            className={`px-3 py-1 text-sm font-medium rounded-md ${
+              filter === 'archived'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+            }`}
+          >
+            Archived
+          </button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-3 py-1 text-sm font-medium rounded-md ${
+              filter === 'all'
+                ? 'bg-purple-100 text-purple-800'
+                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
         </div>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {projects.map((project) => (
-            <li key={project.id}>
-              <div className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-600 truncate">
-                    {project.title}
-                  </div>
-                  <div className="ml-2 flex-shrink-0 flex">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      project.published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {project.published ? 'Published' : 'Draft'}
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Title
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Archive Status
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {projects.map(p => (
+              <tr key={p.id} className={`hover:bg-gray-50 ${p.deleted_at ? 'bg-red-50' : ''}`}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{p.title}</div>
+                  {p.deleted_at && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1">
+                      ARCHIVED
                     </span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    p.is_published
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {p.is_published ? 'Published' : 'Draft'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {p.deleted_at ? 'Archived' : 'Active'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-2">
+                    {p.deleted_at ? (
+                      <button
+                        onClick={() => handleArchiveOrRestore(p.id)}
+                        disabled={deletingId === p.id}
+                        className={`${
+                          deletingId === p.id
+                            ? "opacity-50 cursor-not-allowed text-gray-400"
+                            : "text-green-600 hover:text-green-900"
+                        }`}
+                      >
+                        {deletingId === p.id ? "Restoring..." : "Restore"}
+                      </button>
+                    ) : (
+                      <>
+                        <Link
+                          to={`/admin/projects/${p.id}/edit`}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleToggle(p.id)}
+                          className={`${
+                            p.is_published
+                              ? 'text-yellow-600 hover:text-yellow-900'
+                              : 'text-blue-600 hover:text-blue-900'
+                          }`}
+                        >
+                          {p.is_published ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          onClick={() => handleArchiveOrRestore(p.id)}
+                          disabled={deletingId === p.id}
+                          className={`${
+                            deletingId === p.id
+                              ? "opacity-50 cursor-not-allowed text-gray-400"
+                              : "text-red-600 hover:text-red-900"
+                          }`}
+                        >
+                          {deletingId === p.id ? "Processing..." : "Archive"}
+                        </button>
+                      </>
+                    )}
                   </div>
-                </div>
-                <div className="mt-2 sm:flex sm:justify-between">
-                  <div className="sm:flex">
-                    <div className="mr-6 text-sm text-gray-500">
-                      <p className="truncate">{project.short_description || 'No description'}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                    <time dateTime={project.created_at}>
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </time>
-                  </div>
-                </div>
-                <div className="mt-4 flex space-x-3">
-                  <Link
-                    to={`/admin/projects/${project.id}/edit`}
-                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(project.id)}
-                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      {projects.length === 0 && (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No projects</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by creating a new project.</p>
-          <div className="mt-6">
-            <Link
-              to="/admin/projects/create"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Create New Project
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ interface MetaTagsProps {
 }
 
 export default function MetaTags({
-  title = "datheory - Data Science & Machine Learning Portfolio",
+  title = "Datheory - Data Science & Machine Learning Portfolio",
   description = "Professional portfolio showcasing expertise in data science, machine learning, and fullstack development. Explore projects and skills.",
   path = "/",
   image = "/og-image.jpg"
