@@ -15,6 +15,7 @@ class AdminAuth
 
         if (!$token) {
             return response()->json([
+                'success' => false,
                 'message' => 'Token required'
             ], 401);
         }
@@ -26,7 +27,22 @@ class AdminAuth
 
         if (!$adminUser) {
             return response()->json([
+                'success' => false,
                 'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        // Check if token has expired (server-side validation)
+        if ($adminUser->token_expires_at && $adminUser->token_expires_at->isPast()) {
+            // Clear the expired token
+            $adminUser->update([
+                'remember_token' => null,
+                'token_expires_at' => null,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Token expired'
             ], 401);
         }
 
@@ -42,3 +58,4 @@ class AdminAuth
         return $next($request);
     }
 }
+

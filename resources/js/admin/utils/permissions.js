@@ -12,18 +12,21 @@ export function hasPermission(permission) {
         return false;
     }
 
+    // Safety check: ensure permissions array exists
+    const permissions = currentUser.user.permissions || [];
+
     // Check if user has wildcard permission (all permissions)
-    if (currentUser.user.permissions.includes('*')) {
+    if (permissions.includes('*')) {
         return true;
     }
 
     // Check for exact permission match
-    if (currentUser.user.permissions.includes(permission)) {
+    if (permissions.includes(permission)) {
         return true;
     }
 
     // Check for wildcard permission groups (e.g., 'projects.*' matches 'projects.view')
-    for (const perm of currentUser.user.permissions) {
+    for (const perm of permissions) {
         if (perm.endsWith('.*')) {
             const prefix = perm.slice(0, -2); // Remove '.*' from the end
             if (permission.startsWith(prefix)) {

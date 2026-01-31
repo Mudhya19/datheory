@@ -43,7 +43,8 @@ class AdminRole extends Model
         // Check for wildcard permission groups (e.g., 'projects.*' matches 'projects.view')
         foreach ($permissions as $perm) {
             if (str_ends_with($perm, '.*')) {
-                $prefix = rtrim($perm, '*.');
+                // Extract prefix correctly: 'projects.*' -> 'projects.'
+                $prefix = substr($perm, 0, -1); // Remove '*', keep 'projects.'
                 if (str_starts_with($permission, $prefix)) {
                     return true;
                 }

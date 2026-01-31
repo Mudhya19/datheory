@@ -37,7 +37,20 @@ export default function Projects() {
   useEffect(() => {
     ProjectService.getAll()
       .then((res) => {
-        setProjects(res.data.data);
+        // Debugging to ensure we see what we get
+        console.log("Projects API response:", res.data);
+        const data = res.data.data || [];
+
+        if (Array.isArray(data)) {
+            setProjects(data);
+        } else if (data.data && Array.isArray(data.data)) {
+             // Handle potential double wrapping if backend changes
+             setProjects(data.data);
+        } else {
+             console.error("Unexpected data format:", data);
+             setProjects([]);
+             setError('Received invalid data format from server.');
+        }
         setError(null);
       })
       .catch((err) => {

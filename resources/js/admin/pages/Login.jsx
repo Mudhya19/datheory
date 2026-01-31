@@ -1,14 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../../services/api";
-import { useNavigate } from "react-router-dom";
-import { setCurrentUser } from "../services/auth.service";
+import { useNavigate, useLocation } from "react-router-dom";
+import { setCurrentUser, getCurrentUser } from "../services/auth.service";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Redirect authenticated users to /admin
+  useEffect(() => {
+    try {
+      const currentUser = getCurrentUser();
+      if (currentUser && currentUser.token) {
+        // Check if token is still valid
+        const expiresAt = Number(currentUser.expiresAt);
+        if (!isNaN(expiresAt) && Date.now() / 1000 < expiresAt) {
+          // User is authenticated, redirect to intended destination or /admin
+          const from = location.state?.from || "/admin";
+          navigate(from, { replace: true });
+        }
+      }
+    } catch (e) {
+      console.error("Error checking auth state:", e);
+      // Clear corrupted session data
+      sessionStorage.clear();
+    }
+  }, [navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +42,9 @@ export default function Login() {
       // Store user data along with token
       setCurrentUser(res.data.user, res.data.token, res.data.expires_at);
 
-      navigate("/admin");
+      // Redirect to intended destination or /admin
+      const from = location.state?.from || "/admin";
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Email atau password salah");
     } finally {
@@ -30,7 +53,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-500">
@@ -45,7 +68,7 @@ export default function Login() {
         {error && (
           <div className="rounded-md bg-red-50 p-4">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 0 0-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>

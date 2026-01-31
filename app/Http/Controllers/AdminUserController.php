@@ -4,134 +4,182 @@ namespace App\Http\Controllers;
 
 use App\Models\AdminUser;
 use App\Models\AdminRole;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * Admin User Controller
+ *
+ * Handles CRUD operations for admin users.
+ * Protected by admin.auth middleware and admin.permission.
+ */
 class AdminUserController extends Controller
 {
-    public function index()
+    use ApiResponse;
+
+    /**
+     * Validation rules for creating a user
+     */
+    private function storeRules(): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:admin_users,email',
+            'password' => 'required|string|min:8|max:255',
+            'role_id' => 'required|integer|exists:admin_roles,id',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    /**
+     * Validation rules for updating a user
+     */
+    private function updateRules(int $userId): array
+    {
+        return [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255|unique:admin_users,email,' . $userId,
+            'password' => 'nullable|string|min:8|max:255',
+            'role_id' => 'sometimes|integer|exists:admin_roles,id',
+            'is_active' => 'sometimes|boolean',
+        ];
+    }
+
+    /**
+     * Format user data for response
+     */
+    private function formatUser(AdminUser $user): array
+    {
+        // Safely handle missing role with fallback values
+        $roleData = $user->role ? [
+            'id' => $user->role->id,
+            'name' => $user->role->name,
+            'display_name' => $user->role->display_name,
+        ] : [
+            'id' => null,
+            'name' => 'unassigned',
+            'display_name' => 'No Role Assigned',
+        ];
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $roleData,
+            'is_active' => $user->is_active,
+            'last_login_at' => $user->last_login_at?->toISOString(),
+            'created_at' => $user->created_at->toISOString(),
+            'updated_at' => $user->updated_at->toISOString(),
+        ];
+    }
+
+    /**
+     * GET /api/admin-users
+     * List all admin users
+     */
+    public function index(): JsonResponse
     {
         $users = AdminUser::with('role')->get();
 
-        return response()->json([
-            'data' => $users->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => [
-                        'id' => $user->role->id,
-                        'name' => $user->role->name,
-                        'display_name' => $user->role->display_name,
-                    ],
-                    'is_active' => $user->is_active,
-                    'created_at' => $user->created_at->format('Y-m-d'),
-                ];
-            })
-        ]);
+        $formatted = $users->map(function (AdminUser $user) {
+            return $this->formatUser($user);
+        });
+
+        return $this->success($formatted);
     }
 
-    public function store(Request $request)
+    /**
+     * GET /api/admin-users/{user}
+     * Show single admin user
+     */
+    public function show(AdminUser $user): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:admin_users,email',
-            'password' => 'required|string|min:8',
-            'role_id' => 'required|exists:admin_roles,id',
-        ]);
+        $user->load('role');
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+        return $this->success($this->formatUser($user));
+    }
+
+    /**
+     * POST /api/admin-users
+     * Create new admin user
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate($this->storeRules());
+
+        try {
+            $user = DB::transaction(function () use ($validated) {
+                $validated['password'] = Hash::make($validated['password']);
+
+                return AdminUser::create($validated);
+            });
+
+            $user->load('role');
+
+            return $this->created(
+                $this->formatUser($user),
+                'Admin user created successfully'
+            );
+        } catch (\Exception $e) {
+            report($e);
+            return $this->serverError('Failed to create admin user');
         }
-
-        $validatedData = $validator->validated();
-        $validatedData['password'] = Hash::make($validatedData['password']);
-
-        $user = AdminUser::create($validatedData);
-
-        return response()->json([
-            'message' => 'User created successfully',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role_id' => $user->role_id,
-                'is_active' => $user->is_active,
-                'created_at' => $user->created_at->format('Y-m-d'),
-            ]
-        ], 201);
     }
 
-    public function show(AdminUser $user)
+    /**
+     * PUT /api/admin-users/{user}
+     * Update admin user
+     */
+    public function update(Request $request, AdminUser $user): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role_id' => $user->role_id,
-                'is_active' => $user->is_active,
-                'created_at' => $user->created_at->format('Y-m-d'),
-                'updated_at' => $user->updated_at->format('Y-m-d'),
-            ]
-        ]);
-    }
+        $validated = $request->validate($this->updateRules($user->id));
 
-    public function update(Request $request, AdminUser $user)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:admin_users,email,' . $user->id,
-            'password' => 'nullable|string|min:8',
-            'role_id' => 'sometimes|exists:admin_roles,id',
-            'is_active' => 'sometimes|boolean',
-        ]);
+        try {
+            DB::transaction(function () use ($user, $validated) {
+                // Hash password if provided
+                if (!empty($validated['password'])) {
+                    $validated['password'] = Hash::make($validated['password']);
+                } else {
+                    unset($validated['password']);
+                }
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+                $user->update($validated);
+            });
+
+            $user->load('role');
+
+            return $this->success(
+                $this->formatUser($user->fresh()),
+                'Admin user updated successfully'
+            );
+        } catch (\Exception $e) {
+            report($e);
+            return $this->serverError('Failed to update admin user');
         }
-
-        $validatedData = $validator->validated();
-
-        if (isset($validatedData['password'])) {
-            $validatedData['password'] = Hash::make($validatedData['password']);
-        }
-
-        $user->update($validatedData);
-
-        return response()->json([
-            'message' => 'User updated successfully',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role_id' => $user->role_id,
-                'is_active' => $user->is_active,
-                'updated_at' => $user->updated_at->format('Y-m-d'),
-            ]
-        ]);
     }
 
-    public function destroy(AdminUser $user)
+    /**
+     * DELETE /api/admin-users/{user}
+     * Delete admin user
+     */
+    public function destroy(AdminUser $user): JsonResponse
     {
-        // Don't allow deletion of the main admin user
+        // Prevent deletion of the primary admin (id=1)
         if ($user->id === 1) {
-            return response()->json([
-                'message' => 'Cannot delete the main admin user'
-            ], 403);
+            return $this->forbidden('Cannot delete the primary admin user');
         }
 
-        $user->delete();
+        try {
+            $user->delete();
 
-        return response()->json([
-            'message' => 'User deleted successfully'
-        ]);
+            return $this->success(null, 'Admin user deleted successfully');
+        } catch (\Exception $e) {
+            report($e);
+            return $this->serverError('Failed to delete admin user');
+        }
     }
 }
+

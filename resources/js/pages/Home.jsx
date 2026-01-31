@@ -1,16 +1,33 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import Skills from "../components/Skills";
+import { ProfileService } from "../services/profile.service";
 
 export default function Home() {
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    ProfileService.getProfile()
+      .then(res => {
+          console.log("Profile data:", res.data);
+          setProfile(res.data.data);
+      })
+      .catch(err => console.error("Failed to load profile:", err));
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Hero Section */}
       <section className="text-center py-16 md:py-24" aria-labelledby="hero-title">
         <div className="mb-8">
           <h1 id="hero-title" className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-            Hi, Welcome to Datheory
+            Hi, I'm {profile?.full_name || 'Datheory'}
+            <span className="block text-2xl md:text-4xl mt-4 text-white font-normal">
+                {profile?.title || 'Data Science & Machine Learning Specialist'}
+            </span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
-            Data Science & Machine Learning Specialist | Transforming raw data into actionable business insights
+          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10 whitespace-pre-line">
+            {profile?.bio || 'Transforming raw data into actionable business insights'}
           </p>
         </div>
 
@@ -22,7 +39,7 @@ export default function Home() {
             View My Projects
           </Link>
           <a
-            href="#contact"
+            href={profile?.email ? `mailto:${profile.email}` : "#contact"}
             className="px-8 py-4 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-all duration-300 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500/50"
           >
             Get In Touch
@@ -30,12 +47,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
+      {/* Skills Section */}
+      <Skills />
+
+      {/* Services/About Section */}
       <section className="py-12 border-t border-gray-800">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">About Me</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">About Me & Services</h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            I specialize in building data analysis and machine learning solutions that transform raw data into valuable business insights
+            {profile?.bio || 'I specialize in building end-to-end data solutions'}
           </p>
         </div>
 

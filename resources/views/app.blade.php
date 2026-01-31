@@ -2,8 +2,10 @@
 <html>
 
 <head>
-    <title>TEST BLADE</title>
-    @vite(['resources/js/app.jsx'], 'http://127.0.0.1:5174')
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datheory Portfolio</title>
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>
 
 <body>

@@ -29,10 +29,7 @@ class Profile extends Model
         return $this->full_name;
     }
 
-    public function getLocationAttribute()
-    {
-        return $this->url;
-    }
+
 
     public function getAvatarAttribute()
     {

@@ -13,12 +13,14 @@ class AdminPermission
 
         if (!$adminUser) {
             return response()->json([
+                'success' => false,
                 'message' => 'Authentication required'
             ], 401);
         }
 
         if (!$adminUser->hasPermission($permission)) {
             return response()->json([
+                'success' => false,
                 'message' => 'Insufficient permissions'
             ], 403);
         }
@@ -26,3 +28,4 @@ class AdminPermission
         return $next($request);
     }
 }
+

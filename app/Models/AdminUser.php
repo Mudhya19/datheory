@@ -18,6 +18,8 @@ class AdminUser extends Authenticatable
         'is_active',
         'last_login_at',
         'last_login_ip',
+        'token_expires_at',
+        'remember_token',
     ];
 
     protected $hidden = [
@@ -28,6 +30,7 @@ class AdminUser extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'token_expires_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 
@@ -38,9 +41,15 @@ class AdminUser extends Authenticatable
 
     /**
      * Check if the user has a specific permission
+     * Returns false safely if role is not assigned
      */
     public function hasPermission(string $permission): bool
     {
+        // Safely handle missing role
+        if (!$this->role) {
+            return false;
+        }
+
         return $this->role->hasPermission($permission);
     }
 
@@ -72,9 +81,16 @@ class AdminUser extends Authenticatable
 
     /**
      * Get all permissions for this user through their role
+     * Returns empty array safely if role is not assigned
      */
     public function getAllPermissions(): array
     {
+        // Safely handle missing role
+        if (!$this->role) {
+            return [];
+        }
+
         return $this->role->getAllPermissions();
     }
 }
+

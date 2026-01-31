@@ -10,6 +10,10 @@ import ProjectForm from "./admin/pages/ProjectForm";
 import Login from "./admin/pages/Login";
 import AdminGuard from "./admin/AdminGuard";
 import ProtectedRoute from "./admin/components/ProtectedRoute";
+import SkillForm from "./admin/pages/SkillForm";
+import Profile from "./admin/pages/Profile";
+import Users from "./admin/pages/Users";
+import SkillsAdmin from "./admin/pages/Skills";
 
 // Simple fallback components for now
 const Skills = () => <div className="p-8"><h1 className="text-3xl font-bold text-yellow-400">Skills Page</h1><p>Skills and expertise</p></div>;
@@ -47,6 +51,11 @@ export const router = createBrowserRouter([
       }
     ]
   },
+  // Admin login - accessible at /login (primary) and /admin/login (alias)
+  {
+    path: "/login",
+    element: <Login />
+  },
   {
     path: "/admin/login",
     element: <Login />
@@ -74,7 +83,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "skills",
-        element: <ProtectedRoute permission="skills.view"><Skills /></ProtectedRoute>
+        element: <ProtectedRoute permission="skills.view"><SkillsAdmin /></ProtectedRoute>
       },
       {
         path: "skills/create",

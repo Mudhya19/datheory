@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\AdminUser;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class AdminAuthController extends Controller
 {
@@ -15,21 +16,40 @@ class AdminAuthController extends Controller
             'password' => 'required'
         ]);
 
-        $adminUser = AdminUser::where('email', $request->email)
+        // Eager load role to prevent null access later
+        $adminUser = AdminUser::with('role')
+            ->where('email', $request->email)
             ->where('is_active', true)
             ->first();
 
-        if (!$adminUser || !\Illuminate\Support\Facades\Hash::check($request->password, $adminUser->password)) {
+        if (!$adminUser || !Hash::check($request->password, $adminUser->password)) {
             return response()->json([
+                'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        // Generate a new token
+        // Validate role exists
+        if (!$adminUser->role) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User has no assigned role'
+            ], 403);
+        }
+
+        // Generate a new token with expiration
         $token = Str::random(60);
-        $adminUser->update(['remember_token' => $token]);
+        $expiresAt = now()->addHours(24);
+
+        $adminUser->update([
+            'remember_token' => $token,
+            'token_expires_at' => $expiresAt,
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ]);
 
         return response()->json([
+            'success' => true,
             'token' => $token,
             'user' => [
                 'id' => $adminUser->id,
@@ -39,7 +59,7 @@ class AdminAuthController extends Controller
                 'role_display_name' => $adminUser->role->display_name,
                 'permissions' => $adminUser->getAllPermissions(),
             ],
-            'expires_at' => now()->addHours(24)->timestamp // 24 hours token expiry
+            'expires_at' => $expiresAt->timestamp
         ]);
     }
 
@@ -50,22 +70,46 @@ class AdminAuthController extends Controller
         if ($token) {
             $adminUser = AdminUser::where('remember_token', $token)->first();
             if ($adminUser) {
-                $adminUser->update(['remember_token' => null]);
+                // Clear both token AND expiration for data consistency
+                $adminUser->update([
+                    'remember_token' => null,
+                    'token_expires_at' => null,
+                ]);
             }
         }
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully'
+        ]);
     }
 
     public function me(Request $request)
     {
+        // Route is now protected by admin.auth middleware
+        // so admin_user is always set when this method is called
         $adminUser = $request->attributes->get('admin_user');
 
+        // Defensive check (should never happen with middleware, but safe)
         if (!$adminUser) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        // Ensure role is loaded
+        $adminUser->load('role');
+
+        if (!$adminUser->role) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User has no assigned role'
+            ], 403);
         }
 
         return response()->json([
+            'success' => true,
             'user' => [
                 'id' => $adminUser->id,
                 'name' => $adminUser->name,
@@ -77,3 +121,4 @@ class AdminAuthController extends Controller
         ]);
     }
 }
+

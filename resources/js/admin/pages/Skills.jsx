@@ -28,11 +28,7 @@ export default function Skills() {
     setDeletingId(id);
 
     try {
-      await api.delete(`/skills/${id}`, {
-        headers: {
-          'X-ADMIN-TOKEN': sessionStorage.getItem("admin_token")
-        }
-      });
+      await api.delete(`/skills/${id}`);
       setSkills(prev => prev.filter(s => s.id !== id));
     } catch (error) {
       alert("Failed to delete skill: " + (error.response?.data?.message || "Unknown error"));

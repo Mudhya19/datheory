@@ -14,7 +14,7 @@ export function logout() {
     }
 
     sessionStorage.clear();
-    window.location.href = "/admin/login";
+    window.location.href = "/login";
 }
 
 export function getCurrentUser() {

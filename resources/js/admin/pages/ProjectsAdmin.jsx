@@ -12,6 +12,7 @@ export default function ProjectsAdmin() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
   const [filter, setFilter] = useState('active'); // 'active', 'archived', 'all'
 
   useEffect(() => {
@@ -166,13 +167,21 @@ export default function ProjectsAdmin() {
   }
 
   async function handleToggle(id) {
-    const res = await toggleProjectStatus(id);
+    setTogglingId(id);
+    try {
+      const res = await toggleProjectStatus(id);
 
-    setProjects(prev =>
-      prev.map(p =>
-        p.id === id ? { ...p, is_published: res.data.data.is_published } : p
-      )
-    );
+      setProjects(prev =>
+        prev.map(p =>
+          p.id === id ? { ...p, is_published: res.data.data.is_published } : p
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling project status:', error);
+      alert('Failed to update project status: ' + (error.response?.data?.message || 'Unknown error'));
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   return (
@@ -228,6 +237,9 @@ export default function ProjectsAdmin() {
                 Title
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -248,6 +260,9 @@ export default function ProjectsAdmin() {
                       ARCHIVED
                     </span>
                   )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-sm text-gray-500 capitalize">{p.project_type?.replace('_', ' ') || 'Data Science'}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -285,13 +300,18 @@ export default function ProjectsAdmin() {
                         </Link>
                         <button
                           onClick={() => handleToggle(p.id)}
+                          disabled={togglingId === p.id}
                           className={`${
-                            p.is_published
-                              ? 'text-yellow-600 hover:text-yellow-900'
-                              : 'text-blue-600 hover:text-blue-900'
+                            togglingId === p.id
+                              ? 'opacity-50 cursor-not-allowed text-gray-400'
+                              : p.is_published
+                                ? 'text-yellow-600 hover:text-yellow-900'
+                                : 'text-blue-600 hover:text-blue-900'
                           }`}
                         >
-                          {p.is_published ? "Unpublish" : "Publish"}
+                          {togglingId === p.id
+                            ? 'Updating...'
+                            : p.is_published ? "Unpublish" : "Publish"}
                         </button>
                         <button
                           onClick={() => handleArchiveOrRestore(p.id)}

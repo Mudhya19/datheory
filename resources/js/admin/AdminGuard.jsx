@@ -6,7 +6,7 @@ export default function AdminGuard({ children }) {
   const location = useLocation();
 
   if (!currentUser || !currentUser.token) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   // Check if token has expired, but be safe with the expiresAt value
@@ -16,17 +16,16 @@ export default function AdminGuard({ children }) {
       if (isNaN(expiresAt)) {
         console.error('Invalid expiresAt value in token');
         sessionStorage.clear();
-        return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+        return <Navigate to="/login" replace state={{ from: location.pathname }} />;
       }
 
       if (Date.now() / 1000 > expiresAt) {
-        sessionStorage.clear();
-        return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+        console.warn('Token expired based on client clock. Relying on backend validation.');
+        // We do NOT clear session here immediately to avoid client-clock skew issues.
+        // If the backend says 401, api.js will handle logout.
       }
     } catch (e) {
       console.error('Error checking token expiration:', e);
-      sessionStorage.clear();
-      return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
     }
   } else {
     // If there's no expiration time, we'll assume the token is valid

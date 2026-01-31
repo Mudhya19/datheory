@@ -13,8 +13,14 @@ export default function ProjectDetail() {
 
     ProjectService.getBySlug(slug)
       .then((res) => {
-        setProject(res.data.data);
-        setError(null);
+        console.log("Project Detail API response:", res.data);
+        const data = res.data.data;
+        if (data) {
+             setProject(data);
+             setError(null);
+        } else {
+             setError("Project data is missing in response.");
+        }
       })
       .catch((err) => {
         console.error('Error fetching project:', err);
@@ -169,11 +175,12 @@ export default function ProjectDetail() {
           <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
             <h3 className="text-lg font-semibold text-blue-400 mb-2">Technologies Used</h3>
             <div className="flex flex-wrap gap-2">
-              {project.tech_stack?.split(',').map((tech, index) => (
+              {(Array.isArray(project.tech_stack) ? project.tech_stack : (project.tech_stack || '').split(','))
+                .map((tech, index) => (
                 <span key={index} className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm">
                   {tech.trim()}
                 </span>
-              )) || <span className="text-gray-500">N/A</span>}
+              ))}
             </div>
           </div>
 

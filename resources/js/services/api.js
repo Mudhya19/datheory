@@ -32,7 +32,7 @@ api.interceptors.request.use(
     }
 );
 
-// Add a response interceptor to hide loading
+// Add a response interceptor to hide loading and handle auth errors
 api.interceptors.response.use(
     (response) => {
         // Hide loading indicator
@@ -50,6 +50,16 @@ api.interceptors.response.use(
         } catch (e) {
             console.error('Error dispatching event in response interceptor:', e);
         }
+
+        // Handle 401 Unauthorized - Auto Logout
+        if (error.response && error.response.status === 401) {
+            // Only redirect if we are not already on the login page to avoid loops
+            if (!window.location.pathname.includes('/login')) {
+                sessionStorage.clear();
+                window.location.href = '/login';
+            }
+        }
+
         return Promise.reject(error);
     }
 );
